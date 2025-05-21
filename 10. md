@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문의 게시판 - 글 작성</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 50px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        /* 제목 입력 폼 */
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        /* 내용 입력 폼 */
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            resize: none;
+            max-height: 400px;
+            min-height: 150px;
+            box-sizing: border-box;
+        }
+        /* 첨부파일 입력 폼 */
+        .file-container {
+            margin-bottom: 20px;
+        }
+        .file-container label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-container input[type="file"] {
+            display: none;
+        }
+        .file-button {
+            cursor: pointer;
+        }
+        .file-button img {
+            width: 120px;
+            height: auto;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: white;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 150px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn.cancel {
+            background-color: #dc3545;
+        }
+        .btn.cancel:hover {
+            background-color: #c82333;
+        }
+        .alert {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            display: none;
+        }
+        .alert.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>글 작성</h1>
+    <!-- 게시글 작성 폼 -->
+    <form id="writeForm" action="/submit-post" method="POST" enctype="multipart/form-data" onsubmit="return submitForm(event)">
+        <!-- 제목 입력 폼 -->
+        <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text" id="title" name="title" required placeholder="제목을 입력하세요" maxlength="20">
+        </div>
+
+        <!-- 내용 입력 폼 -->
+        <div class="form-group">
+            <label for="content">내용</label>
+            <textarea id="content" name="content" rows="5" required placeholder="내용을 입력하세요 (500자 내외)" maxlength="500"></textarea>
+        </div>
+
+        <!-- 첨부파일 입력 폼 -->
+        <div class="form-group file-container">
+            <label for="file">
+                첨부파일
+                <!-- 첨부파일 선택을 위한 이미지 버튼 -->
+                <label class="file-button" for="file">
+                    <img src="file-upload-icon.png" alt=".">
+                </label>
+            </label>
+            <!-- 여러 파일 선택을 위해 'multiple' 속성 추가 -->
+            <input type="file" id="file" name="file[]" multiple>
+            <!-- 파일명 텍스트박스 (첨부된 파일명이 이곳에 표시됨) -->
+            <textarea id="fileName" name="fileName" placeholder="첨부 파일을 올려주세요" disabled rows="5"></textarea>
+        </div>
+
+        <!-- 버튼들 -->
+        <div class="btn-container">
+            <button type="submit" class="btn">등록</button>
+            <button type="button" class="btn cancel" onclick="cancelForm()">취소</button>
+        </div>
+    </form>
+
+    <!-- 성공 메시지 -->
+    <div class="alert" id="successMessage">
+        글이 성공적으로 등록되었습니다.
+    </div>
+</div>
+
+<script>
+    function submitForm(event) {
+        // 폼 제출을 막고 AJAX로 처리
+        event.preventDefault();
+
+        const formData = new FormData(document.getElementById("writeForm"));
+
+        fetch("/submit-post", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                // 글 작성 성공 시
+                document.getElementById("successMessage").classList.add("show");
+                setTimeout(() => {
+                    window.location.href = "/faq";  // 글 작성 후 문의 게시판으로 리디렉션
+                }, 2000);
+            } else {
+                alert("게시글 작성에 실패했습니다. 다시 시도해주세요.");
+            }
+        })
+        .catch(error => {
+            alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
+        });
+    }
+
+    // 취소 버튼 클릭 시 폼 초기화
+    function cancelForm() {
+        if (confirm("작성을 취소하시겠습니까?")) {
+            document.getElementById("writeForm").reset();
+            window.location.href = "/faq";
+        }
+    }
+
+    // 파일 선택 시 텍스트박스 안에서 세로로 파일명 표시 (기존 파일명과 합치기)
+    document.getElementById("file").addEventListener("change", function() {
+        const files = document.getElementById("file").files;
+        const fileNames = [];
+
+        // 기존 텍스트박스에 있는 파일명을 먼저 가져옴
+        const existingFileNames = document.getElementById("fileName").value.trim().split("\n");
+
+        // 기존 파일명들을 fileNames 배열에 추가
+        fileNames.push(...existingFileNames);
+
+        // 선택된 파일들의 이름을 배열로 수집
+        for (let i = 0; i < files.length; i++) {
+            fileNames.push(files[i].name);
+        }
+
+        // 텍스트박스에 파일명 세로로 표시 (누적)
+        document.getElementById("fileName").value = fileNames.join("\n");
+    });
+</script>
+
+</body>
+</html>
